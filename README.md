@@ -25,7 +25,8 @@ Example observations:
 
 ## Example Output
 
- frame_id  type    class         distance_m  box_height_px    num_points      confidence  iou    image_path
+```text
+  frame_id  type    class         distance_m  box_height_px    num_points      confidence  iou    image_path
 ----------  ------  ----------  ------------  ---------------  ------------  ------------  -----  ----------------
     000000  FP      Car             11.6708                                      0.902358         frame_000000.png
     000000  FP      Car             10.1807                                      0.6              frame_000000.png
@@ -34,44 +35,32 @@ Example observations:
     000003  FP      Car              4.96158                                     0.827382         frame_000003.png
     000003  FP      Car             20.0365                                      0.6              frame_000003.png
     000004  FP      Cyclist         21.589                                       0.6              frame_000004.png
+```
 
 ## Example Confusion Matrix
 
-
+```text
 gt\pred       Car    Cyclist    Pedestrian
 ----------  -----  ---------  ------------
 Car             3          0             0
 Cyclist         0          5             0
 Pedestrian      2          0             5
+```
 
 
 ## Pipeline Overview
 
-Dataset
-   │
-   ▼
-Detector Predictions
-   │
-   ▼
-JSON Export
-   │
-   ▼
-Box3D Parsing
-   │
-   ▼
-IoU Matching
-   │
-   ▼
-Failure Classification
-   │
-   ▼
-FailureRecord
-   │
-   ▼
-SQLite Storage
-   │
-   ▼
-CLI Query + Analysis
+```mermaid
+flowchart TD
+    A["Dataset"] --> B["Detector Predictions"]
+    B --> C["JSON Export"]
+    C --> D["Box3D Parsing"]
+    D --> E["IoU Matching"]
+    E --> F["Failure Classification"]
+    F --> G["FailureRecord"]
+    G --> H["SQLite Storage"]
+    H --> I["CLI Query + Analysis"]
+```
 
 ---
 
