@@ -19,9 +19,9 @@ The goal is to accelerate iteration on perception models by making errors **stru
 
 ## Example observations: 
 
-- False negatives increase significantly beyond 40m
-- Pedestrian and Cyclist class confusion only occurs in low-point-density regions
-- Localization errors increase sharply for half-occluded vehicles
+- "False negatives increase significantly beyond 40m"
+- "Pedestrian and Cyclist class confusion only occurs in low-point-density regions"
+- "Localization errors increase sharply for half-occluded vehicles"
 
 ## Pipeline Overview
 
