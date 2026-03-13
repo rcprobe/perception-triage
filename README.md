@@ -243,7 +243,14 @@ Tradeoffs:
 - Not ideal for large, multi-user workloads
 - No run management or deduplication yet
 
-## Waymo / OpenPCDet Status
+## Limitations
+
+- Matching is greedy and does not enforce one-to-one assignment.
+- The default IoU implementation is axis-aligned.
+- The confusion matrix currently counts matched pairs only.
+- The database schema is intentionally minimal and optimized for local analysis.
+
+## Waymo / OpenPCDet (Planned Demo)
 
 This repo is designed to support a workflow like:
 
@@ -253,13 +260,6 @@ This repo is designed to support a workflow like:
 4. Build the failure database and analyze it locally.
 
 That integration is **planned but not yet implemented end to end in this repo**. The current verified path is the synthetic data workflow plus the failure database and confusion-matrix tooling.
-
-## Limitations
-
-- Matching is greedy and does not enforce one-to-one assignment.
-- The default IoU implementation is axis-aligned.
-- The confusion matrix currently counts matched pairs only.
-- The database schema is intentionally minimal and optimized for local analysis.
 
 ## Roadmap
 
