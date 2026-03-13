@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+failures.db
+gt.json
+preds.json
+.DS_Store
+*.egg-info/
