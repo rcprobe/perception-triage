@@ -1,0 +1,284 @@
+# Perception Error Triage Engine (MVP)
+
+**A lightweight perception evaluation pipeline that converts detector outputs into structured failure records for debugging and analysis**
+
+(Work in progess)
+
+Dataset -> Run Detector -> Compare vs Ground Truth -> Store + Query Failures
+
+It does **not** train a model. It focuses on evaluation infrastructure.
+
+## Problem
+
+Modern perception systems produce large volumes of predictions, but diagnosing model failures remains slow and manual. This project implements a lightweight **perception error triage engine** that:
+
+1. Compares detector outputs with ground truth
+2. Classifies detection failures
+3. Stores them in a queryable database
+4. Presents a Confusion Matrix to allow for rapid analysis of failure patterns
+
+The goal is to accelerate iteration on perception models by making errors **structured, searchable, and analyzable**.
+
+Example observations:
+
+- 'False negatives increase significantly beyond 40m'
+- 'Pedestrian / Cyclist class confusion occurs in low-point-density regions only'
+- 'Localization errors increase for half-occluded vehicles'
+
+## Example Output
+
+ frame_id  type    class         distance_m  box_height_px    num_points      confidence  iou    image_path
+----------  ------  ----------  ------------  ---------------  ------------  ------------  -----  ----------------
+    000000  FP      Car             11.6708                                      0.902358         frame_000000.png
+    000000  FP      Car             10.1807                                      0.6              frame_000000.png
+    000001  FP      Car             18.8014                                      0.6              frame_000001.png
+    000002  FP      Pedestrian      21.9362                                      0.6              frame_000002.png
+    000003  FP      Car              4.96158                                     0.827382         frame_000003.png
+    000003  FP      Car             20.0365                                      0.6              frame_000003.png
+    000004  FP      Cyclist         21.589                                       0.6              frame_000004.png
+
+## Example Confusion Matrix
+
+
+gt\pred       Car    Cyclist    Pedestrian
+----------  -----  ---------  ------------
+Car             3          0             0
+Cyclist         0          5             0
+Pedestrian      2          0             5
+
+
+## Pipeline Overview
+
+Dataset
+   │
+   ▼
+Detector Predictions
+   │
+   ▼
+JSON Export
+   │
+   ▼
+Box3D Parsing
+   │
+   ▼
+IoU Matching
+   │
+   ▼
+Failure Classification
+   │
+   ▼
+FailureRecord
+   │
+   ▼
+SQLite Storage
+   │
+   ▼
+CLI Query + Analysis
+
+---
+
+## Failure Types
+
+The system categorizes detection outcomes into four types:
+
+| Type | Description |
+|------|-------------|
+| TP   | Prediction correctly matches a ground truth box |
+| FP   | Prediction does not correspond to any ground truth |
+| FN   | Ground truth object was missed by the detector |
+| LOC  | Prediction overlaps GT but the localization error exceeds threshold |
+
+---
+
+### Quick start
+
+1. Create a virtual environment and install requirements.
+2. Export predictions and ground truth to JSON (example format below).
+3. Build the failure database.
+4. Query failures.
+
+## Requirements
+
+Install minimal dependencies:
+
+```bash
+pip install -r requirements.txt
+export PYTHONPATH=src
+```
+
+## Example JSON formats
+
+**Predictions** JSON (list of frames):
+
+```json
+[
+  {
+    "frame_id": "000042",
+    "image_path": "path/to/000042.png",
+    "predictions": [
+      {"x": 1.2, "y": 5.1, "z": 0.0, "dx": 1.6, "dy": 3.9, "dz": 1.5, "yaw": 0.1, "class": "Car", "score": 0.92}
+    ]
+  }
+]
+```
+
+**Ground Truth** JSON (list of frames):
+
+```json
+[
+  {
+    "frame_id": "000042",
+    "image_path": "path/to/000042.png",
+    "ground_truth": [
+      {"x": 1.0, "y": 5.0, "z": 0.0, "dx": 1.6, "dy": 3.9, "dz": 1.5, "yaw": 0.1, "class": "Car", "occlusion": 1, "truncation": 0.0, "num_points": 12, "box_height_px": 18}
+    ]
+  }
+]
+```
+
+## Build failures DB
+
+```bash
+python -m triage.cli build \
+  --predictions data/preds.json \
+  --ground-truth data/gt.json \
+  --db failures.db \
+  --iou-threshold 0.5 \
+  --loc-threshold 0.1
+```
+
+## Synthetic data (quick sanity check)
+
+```bash
+python scripts/make_synth.py
+python -m triage.cli build --predictions preds.json --ground-truth gt.json --db failures.db
+python -m triage.cli query --db failures.db --type FN
+```
+
+## Query
+
+```bash
+python -m triage.cli query \
+  --db failures.db \
+  --type FN \
+  --class Car \
+  --min-distance 30 \
+  --max-points 10
+```
+
+## Confusion matrix
+
+```bash
+python -m triage.cli confusion \
+  --predictions preds.json \
+  --ground-truth gt.json
+```
+
+By default, the confusion command matches boxes with `class_aware=False` so
+misclassifications show up as off-diagonal counts. Add `--class-aware` if you
+want only same-class matches, or `--json` for machine-readable output.
+
+---
+
+## Project structure
+
+```
+perception-triage/
+  README.md
+  pyproject.toml
+  requirements.txt
+  scripts/
+    build_failures.py
+    make_synth.py
+  src/
+    triage/
+      __init__.py
+      schema.py
+      matching.py
+      failures.py
+      db.py
+      cli.py
+      confusion.py
+  tests/
+```
+---
+
+## Confusion Matrix
+
+The repo includes a lightweight confusion matrix helper that counts how often each ground-truth class is paired with each predicted class, based on the matched pairs (TP + LOC) produced by the matcher.
+
+Usage example:
+
+```python
+from triage.confusion import build_confusion_matrix
+
+confusion = build_confusion_matrix(predictions, ground_truth, match_result)
+# confusion => {"Vehicle": {"Vehicle": 120, "Pedestrian": 3}, ...}
+```
+
+CLI example:
+
+```bash
+python -m triage.cli confusion --predictions preds.json --ground-truth gt.json
+```
+
+---
+
+### Design Choices (WIP)
+
+## Axis-aligned IoU
+
+The default matcher uses axis-aligned IoU (yaw ignored) because:
+
+- It simplifies implementation
+- Allows for fast matching
+- Is adequate for pipeline validation
+
+But conversely:
+
+- It overestimates overlap for rotated boxes
+- It can misclassify localization errors
+
+Future work could replace with oriented 3D IoU (BEV or full 3D)
+
+## SQLite Storage
+
+SQLite was chosen for the MVP because it:
+
+- Requires no infrastructure
+- Supports indexed queries
+- Is easy to distribute with the repo
+
+But it also:
+
+- Is not suitable for multi-user workloads
+- Will degrade for very large datasets (>10M rows)
+
+A production system would likely use Postgres or DuckDB.
+
+---
+
+## Waymo + OpenPCDet CenterPoint Demo (Outline)
+
+This pipeline is compatible with Waymo Open Dataset + OpenPCDet CenterPoint.
+At a high level:
+
+1. Prepare Waymo TFRecords and run OpenPCDet Waymo preprocessing.
+2. Run CenterPoint inference with OpenPCDet to generate predictions.
+3. Export predictions + GT to the JSON format in this README.
+4. Build the failure DB with `python -m triage.cli build`.
+
+(Not tested due to CUDA requirements - unavailable on MPS)
+
+---
+
+## Planned Extensions
+
+- Add an exporter for OpenPCDet CenterPoint outputs
+- Add distance-bucket and occlusion-bucket analysis
+- Add image-level failure visualization
+- Add more robust classification metrics (weather, time, etc.)
+- Add oriented 3D IoU
+
+
+This repository is a personal project created independently and is not affiliated with my employer.
