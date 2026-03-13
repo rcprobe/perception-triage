@@ -259,7 +259,7 @@ This repo is designed to support a workflow like:
 3. Export predictions and ground truth to the JSON schema above.
 4. Build the failure database and analyze it locally.
 
-That integration is **planned but not yet implemented end to end in this repo**. The current verified path is the synthetic data workflow plus the failure database and confusion-matrix tooling.
+This integration is **planned but not yet implemented end to end in this repo**. The current  path is the synthetic data workflow plus the failure database and confusion-matrix tooling due to limitations on MPS.
 
 ## Roadmap
 
