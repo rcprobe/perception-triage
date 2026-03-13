@@ -17,11 +17,11 @@ Modern perception systems produce large volumes of predictions, but diagnosing m
 
 The goal is to accelerate iteration on perception models by making errors **structured, searchable, and analyzable**.
 
-Example observations: 
+## Example observations: 
 
-  'False negatives increase significantly beyond 40m' 
-  'Pedestrian / Cyclist class confusion occurs in low-point-density regions only' 
-  'Localization errors increase for half-occluded vehicles'
+- False negatives increase significantly beyond 40m
+- Pedestrian and Cyclist class confusion only occurs in low-point-density regions
+- Localization errors increase sharply for half-occluded vehicles
 
 ## Pipeline Overview
 
