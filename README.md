@@ -17,13 +17,6 @@ Modern perception systems produce large volumes of predictions, but diagnosing m
 
 The goal is to accelerate iteration on perception models by making errors **structured, searchable, and analyzable**.
 
-## Example Workflow
-
-1. Run a detector and export predictions.
-2. Convert predictions and labels to the JSON format.
-3. Build the failure database.
-4. Query failures or compute confusion statistics.
-
 ## Example observations: 
 
 - "False negatives increase significantly beyond 40m."
