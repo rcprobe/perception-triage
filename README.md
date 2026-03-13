@@ -8,13 +8,20 @@ This project does **not** train a model. It focuses on evaluation infrastructure
 
 ## Problem
 
-Modern perception systems produce a large volume of predictions, but failure analysis is still often manual and slow. This project gives you a compact workflow for answering questions like:
+Modern perception systems produce large volumes of predictions, but diagnosing model failures remains slow and manual. This project implements a lightweight **perception error triage engine** that:
 
-- Where do false negatives happen most often?
-- Do misses correlate with distance, occlusion, or sparse LiDAR returns?
-- Which classes are being confused with one another?
+1. Compares detector outputs with ground truth
+2. Classifies detection failures
+3. Stores them in a queryable database
+4. Generates a Confusion Matrix for rapid analysis of class-level error patterns
 
-The goal is to make perception failures **structured, searchable, and analyzable**.
+The goal is to accelerate iteration on perception models by making errors **structured, searchable, and analyzable**.
+
+Example observations: 
+
+  'False negatives increase significantly beyond 40m' 
+  'Pedestrian / Cyclist class confusion occurs in low-point-density regions only' 
+  'Localization errors increase for half-occluded vehicles'
 
 ## Pipeline Overview
 
@@ -236,13 +243,6 @@ Tradeoffs:
 - Not ideal for large, multi-user workloads
 - No run management or deduplication yet
 
-## Limitations
-
-- Matching is greedy and does not enforce one-to-one assignment.
-- The default IoU implementation is axis-aligned.
-- The confusion matrix currently counts matched pairs only.
-- The database schema is intentionally minimal and optimized for local analysis.
-
 ## Waymo / OpenPCDet Status
 
 This repo is designed to support a workflow like:
@@ -253,6 +253,13 @@ This repo is designed to support a workflow like:
 4. Build the failure database and analyze it locally.
 
 That integration is **planned but not yet implemented end to end in this repo**. The current verified path is the synthetic data workflow plus the failure database and confusion-matrix tooling.
+
+## Limitations
+
+- Matching is greedy and does not enforce one-to-one assignment.
+- The default IoU implementation is axis-aligned.
+- The confusion matrix currently counts matched pairs only.
+- The database schema is intentionally minimal and optimized for local analysis.
 
 ## Roadmap
 
