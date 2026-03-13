@@ -1,16 +1,13 @@
-from __future__ import annotations  # Postpone evaluation of annotations
+from __future__ import annotations
 
-import sqlite3  # lightweight embedded DB
-from typing import Iterable, List, Optional, Tuple, Any  # type hints
+import sqlite3
+from typing import Iterable, List, Optional, Tuple, Any
 
-from .schema import FailureRecord  # record model
+from .schema import FailureRecord
 
 
 def init_db(db_path: str) -> None:
-    # Create the failures table and indexes if they don't exist.
     with sqlite3.connect(db_path) as conn:
-        # Schema is intentionally minimal; no uniqueness constraints or run IDs.
-        # Note: column name \"class\" is fine for SQLite but can be reserved elsewhere.
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS failures (
@@ -29,14 +26,12 @@ def init_db(db_path: str) -> None:
             )
             """
         )
-        # Indexes for common filters.
         conn.execute("CREATE INDEX IF NOT EXISTS idx_failures_type ON failures(failure_type)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_failures_class ON failures(class)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_failures_distance ON failures(distance_m)")
 
 
 def insert_failures(db_path: str, failures: Iterable[FailureRecord]) -> int:
-    # Convert to dict rows for executemany insertion.
     rows = [f.to_row() for f in failures]
     if not rows:
         return 0
@@ -64,7 +59,6 @@ def _build_where(
     max_distance: Optional[float],
     max_points: Optional[int],
 ) -> Tuple[str, List[Any]]:
-    # Build a WHERE clause and parameter list safely.
     clauses: List[str] = []
     params: List[Any] = []
 
@@ -98,7 +92,6 @@ def query_failures(
     max_points: Optional[int] = None,
     limit: Optional[int] = 50,
 ) -> List[sqlite3.Row]:
-    # Build SQL query with optional filters.
     where_sql, params = _build_where(
         failure_type=failure_type,
         class_name=class_name,
@@ -107,7 +100,6 @@ def query_failures(
         max_points=max_points,
     )
 
-    # Use parameterized queries to avoid SQL injection and handle typing.
     sql = (
         "SELECT frame_id, failure_type, class, distance_m, box_height_px, "
         "num_points, occlusion, truncation, confidence, image_path, iou "

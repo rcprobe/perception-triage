@@ -2,8 +2,6 @@
 
 **A lightweight perception evaluation pipeline that converts detector outputs into structured failure records for debugging and analysis**
 
-(Work in progess)
-
 Dataset -> Run Detector -> Compare vs Ground Truth -> Store + Query Failures
 
 It does **not** train a model. It focuses on evaluation infrastructure.
@@ -102,6 +100,12 @@ The system categorizes detection outcomes into four types:
 Install minimal dependencies:
 
 ```bash
+pip install -e .
+```
+
+Or, if you prefer not to install the package:
+
+```bash
 pip install -r requirements.txt
 export PYTHONPATH=src
 ```
@@ -147,7 +151,7 @@ python -m triage.cli build \
   --loc-threshold 0.1
 ```
 
-## Synthetic data (quick sanity check)
+## Synthetic data
 
 ```bash
 python scripts/make_synth.py
@@ -224,7 +228,7 @@ python -m triage.cli confusion --predictions preds.json --ground-truth gt.json
 
 ---
 
-### Design Choices (WIP)
+### Design Choices
 
 ## Axis-aligned IoU
 

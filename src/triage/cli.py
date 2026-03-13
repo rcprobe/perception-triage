@@ -1,21 +1,19 @@
-from __future__ import annotations  # Postpone evaluation of annotations
+from __future__ import annotations
 
-import argparse  # CLI argument parsing
-import json  # JSON file I/O
-from typing import Any, Dict, Iterable, List, Optional  # type hints
+import argparse
+import json
+from typing import Any, Dict, Iterable, List, Optional
 
-from tabulate import tabulate  # pretty table output
+from tabulate import tabulate
 
 from .confusion import build_confusion_matrix, confusion_matrix_to_table, merge_confusion_matrices
-from .db import init_db, insert_failures, query_failures  # DB helpers
-from .failures import build_failure_records  # failure record construction
-from .matching import match_frame  # IoU matching
-from .schema import Box3D  # core box model
+from .db import init_db, insert_failures, query_failures
+from .failures import build_failure_records
+from .matching import match_frame
+from .schema import Box3D
 
 
 def _box_from_dict(d: Dict[str, Any]) -> Box3D:
-    # Convert a JSON dict into a Box3D. Missing optional fields become None.
-    # Required keys (x, y, dx, dy, dz) raise KeyError if absent (fail fast).
     return Box3D(
         x=float(d["x"]),
         y=float(d["y"]),
@@ -34,8 +32,6 @@ def _box_from_dict(d: Dict[str, Any]) -> Box3D:
 
 
 def _load_frames(path: str) -> Dict[str, Dict[str, Any]]:
-    # Load a list of frame dicts and key them by frame_id.
-    # Tradeoff: this loads the full JSON into memory for simplicity.
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -53,7 +49,6 @@ def _build_db(
     iou_threshold: float,
     loc_threshold: Optional[float],
 ) -> None:
-    # Initialize DB schema and ingest prediction/GT JSON.
     init_db(db_path)
 
     preds = _load_frames(predictions_path)
@@ -61,12 +56,9 @@ def _build_db(
 
     total_failures = 0
 
-    # Iterate over GT frames to ensure all GT boxes are evaluated.
-    # Tradeoff: frames with predictions but no GT are ignored.
     for frame_id, gt_item in gts.items():
         pred_item = preds.get(frame_id)
         if pred_item is None:
-            # Missing predictions for this frame -> empty list.
             pred_list: List[Box3D] = []
             image_path = gt_item.get("image_path")
         else:
@@ -104,7 +96,6 @@ def _query_db(
     max_points: Optional[int],
     limit: int,
 ) -> None:
-    # Run a query and print results.
     rows = query_failures(
         db_path=db_path,
         failure_type=failure_type,
@@ -159,13 +150,10 @@ def _build_confusion(
     class_aware: bool,
     as_json: bool,
 ) -> None:
-    # Build a confusion matrix directly from prediction/GT JSON inputs.
     preds = _load_frames(predictions_path)
     gts = _load_frames(ground_truth_path)
     matrices = []
 
-    # For confusion analysis, class_aware=False is usually more informative:
-    # it lets a geometrically correct but misclassified box appear off-diagonal.
     for frame_id, gt_item in gts.items():
         pred_item = preds.get(frame_id)
         pred_list = []
@@ -196,7 +184,6 @@ def _build_confusion(
 
 
 def main(argv: Optional[Iterable[str]] = None) -> None:
-    # CLI entrypoint.
     parser = argparse.ArgumentParser(description="Perception failure triage CLI")
     sub = parser.add_subparsers(dest="cmd", required=True)
 

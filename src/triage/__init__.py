@@ -1,9 +1,9 @@
-"""Perception error triage engine (MVP)."""  # Package docstring
+"""Perception error triage engine (MVP)."""
 
-from .schema import Box3D, FailureRecord  # public data models
-from .matching import match_frame  # public matcher
-from .db import init_db, insert_failures, query_failures  # public DB helpers
-from .confusion import build_confusion_matrix  # confusion matrix helper
+from .schema import Box3D, FailureRecord
+from .matching import match_frame
+from .db import init_db, insert_failures, query_failures
+from .confusion import build_confusion_matrix
 
 __all__ = [
     "Box3D",

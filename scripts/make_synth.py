@@ -31,19 +31,16 @@ def main() -> None:
         gt_boxes = []
         pred_boxes = []
 
-        # Create ground truth boxes
         for _ in range(3):
             box = random_box()
             box["class"] = random.choice(CLASSES)
             gt_boxes.append(box)
 
-            # Create prediction near GT (TP / LOC)
             pred = box.copy()
             pred["x"] += random.uniform(-0.5, 0.5)
             pred["y"] += random.uniform(-0.5, 0.5)
             pred["score"] = random.uniform(0.7, 0.95)
 
-            # Sometimes misclassify
             if random.random() < 0.2:
                 pred["class"] = random.choice(CLASSES)
             else:
@@ -51,7 +48,6 @@ def main() -> None:
 
             pred_boxes.append(pred)
 
-        # Add a false positive
         fp = random_box()
         fp["class"] = random.choice(CLASSES)
         fp["score"] = 0.6

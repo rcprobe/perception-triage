@@ -24,7 +24,6 @@ def build_confusion_matrix(
         pred_class = predictions[match.pred_idx].class_name
         confusion[gt_class][pred_class] += 1
 
-    # Convert nested defaultdicts to plain dicts for serialization.
     return {gt: dict(preds) for gt, preds in confusion.items()}
 
 

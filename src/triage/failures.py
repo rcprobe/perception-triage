@@ -1,9 +1,9 @@
-from __future__ import annotations  # Postpone evaluation of annotations
+from __future__ import annotations
 
-from typing import List, Optional  # type hints
+from typing import List, Optional
 
-from .matching import FrameMatchResult  # match outcome per frame
-from .schema import Box3D, FailureRecord  # core data types
+from .matching import FrameMatchResult
+from .schema import Box3D, FailureRecord
 
 
 def build_failure_records(
@@ -13,11 +13,8 @@ def build_failure_records(
     ground_truth: List[Box3D],
     match_result: FrameMatchResult,
 ) -> List[FailureRecord]:
-    # Collect all failure records for a single frame.
     failures: List[FailureRecord] = []
 
-    # False positives: predictions with no valid match.
-    # Tradeoff: we store metadata only, not the full predicted box geometry.
     for pred_idx in match_result.false_positives:
         pred = predictions[pred_idx]
         failures.append(
@@ -36,7 +33,6 @@ def build_failure_records(
             )
         )
 
-    # False negatives: GT boxes with no match.
     for gt_idx in match_result.false_negatives:
         gt = ground_truth[gt_idx]
         failures.append(
@@ -55,8 +51,6 @@ def build_failure_records(
             )
         )
 
-    # Localization errors: matched, but below TP threshold.
-    # We attach GT metadata plus pred confidence and IoU.
     for match in match_result.matches:
         if match.match_type != "LOC":
             continue
